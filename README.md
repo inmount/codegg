@@ -28,7 +28,7 @@ var codegg = new Codegg("editor", {
 codegg.bind("error", function (ex) {
     alert(ex);
 });
-// 绑定错误
+// 绑定保存
 codegg.bind("save", function () {
     alert("保存");
 });
