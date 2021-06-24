@@ -41,7 +41,7 @@ codegg.bind("image", function (e) {
 function getContent() {
     alert(codegg.getContent());
 }
-// 获取内容
+// 设置内容
 function setContent() {
     codegg.setContent("<div>测试内容</div>");
 }
