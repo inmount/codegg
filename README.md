@@ -1,10 +1,30 @@
-# 属于码农的HTML编辑器
+# 码蛋编辑器(codegg)
+
+一款基于js的代码编辑器
+
+A code editor based on js
+
+![license](https://img.shields.io/github/license/inmount/codegg)
+![codeSize](https://img.shields.io/github/languages/code-size/inmount/codegg)
+![lastCommit](https://img.shields.io/github/last-commit/inmount/codegg)
+
+## 故事的开始 - 打造属于码农的HTML编辑器
 
 作为一个码农，对现有网上现有的富文本编辑器意见很大，虽然能无脑鼠标操作，但是结果是要么排版很糟糕，要么就是限制很严重，有些编辑器甚至直接取消了源代码编辑功能。
 
 对于我这种臭写代码的，就是喜欢直接用HTML代码编写详情页，不行吗？怎么就没人能体谅我们这群既当工程师，又当美工，又当客服的苦逼打工人。
 
 所以我做了这个基于原生Js的HTML编辑器，取名codegg，中文就叫码蛋吧，打工人不容易，我有空就更新增加功能，尽量让它茁壮成长。
+
+## 新的故事 - Lark脚本编辑器
+
+2023年1月；
+
+因为业务需要，我基于C#的反射及特性等技术创造出了一种函数式的脚本语言，应用于低代码平台中；
+
+写了一个VSCode插件，但是使用效果不理想，于是，我想到了码蛋编辑器；
+
+相干就干，期待这个编辑器出现全新的样貌。
 
 ## 怎么开始
 
