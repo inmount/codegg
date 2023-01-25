@@ -25,6 +25,7 @@ class LarkCodegg {
         let codeColors = {
             key: "#c586c0",
             sign: "#808080",
+            signs: ["#ff0000", "#0000ff", "#009900"],
             note: "#6a9955",
             string: "#c3602c",
             text: "#222222",
@@ -32,6 +33,7 @@ class LarkCodegg {
         };
         if (typeof (cfg.colors.codeKey) !== "undefined") codeColors.key = cfg.colors.codeKey;
         if (typeof (cfg.colors.codeSign) !== "undefined") codeColors.sign = cfg.colors.codeSign;
+        if (typeof (cfg.colors.codeSigns) !== "undefined") codeColors.signs = cfg.colors.codeSigns;
         if (typeof (cfg.colors.codeNote) !== "undefined") codeColors.note = cfg.colors.codeNote;
         if (typeof (cfg.colors.codeString) !== "undefined") codeColors.string = cfg.colors.codeString;
         if (typeof (cfg.colors.codeText) !== "undefined") codeColors.text = cfg.colors.codeText;
@@ -85,13 +87,21 @@ class LarkCodegg {
             codegg.insertContent("/(val, val)");
         });
         // 添加呈现事件
-        codegg.bind("Render", function () {
+        var showInspiration = function () {
             const that = codegg;
+        };
+        codegg.bind("Render", function (contentChanged) {
+            const that = codegg;
+            if (typeof (contentChanged) === "undefined") contentChanged = false;
+            let posStart = that.editor.selectionStart;
             let txt = that.editor.value;
-            let html = "";
+            let line = 1;
+            // 添加行开始
+            let html = that.getLineStartHtml(1);
             let key = "";
             let keyType = "text";
             let isEscape = false;
+            let sign = 0;
             for (let i = 0; i < txt.length; i++) {
                 let chr = txt[i];
                 switch (chr) {
@@ -102,14 +112,17 @@ class LarkCodegg {
                             html += "<span style='color:" + codeColors[keyType] + ";'>" + key + "</span>";
                             keyType = "text";
                             key = "";
-                            html += "<br />";
+                            //html += "<br />";
                         } else {
                             if (key !== "") {
                                 html += lark.renderKey(key, codeKeys, codeColors);
                                 key = "";
                             }
-                            html += "<br />";
+                            //html += "<br />";
                         }
+                        html += that.getLineEndHtml();
+                        line++;
+                        html += that.getLineStartHtml(line);
                         break;
                     case '\\': // 转义符
                         if (keyType === "string" || keyType === "string") {
@@ -174,8 +187,35 @@ class LarkCodegg {
                     case '<': key += "&lt;"; break;
                     case '>': key += "&gt;"; break;
                     case '&': key += "&amp;"; break;
+                    case '(':
+                        // 设置转义无效
+                        if (isEscape) isEscape = false;
+                        if (keyType === "string" || keyType === "note") {
+                            key += chr;
+                        } else {
+                            if (key !== "") {
+                                html += lark.renderKey(key, codeKeys, codeColors);
+                                key = "";
+                            }
+                            sign++;
+                            html += "<span style='color:" + codeColors.signs[sign % codeColors.signs.length] + ";'>" + chr + "</span>";
+                        }
+                        break;
+                    case ')':
+                        // 设置转义无效
+                        if (isEscape) isEscape = false;
+                        if (keyType === "string" || keyType === "note") {
+                            key += chr;
+                        } else {
+                            if (key !== "") {
+                                html += lark.renderKey(key, codeKeys, codeColors);
+                                key = "";
+                            }
+                            html += "<span style='color:" + codeColors.signs[sign % codeColors.signs.length] + ";'>" + chr + "</span>";
+                            sign--;
+                        }
+                        break;
                     case ',':
-                    case '(': case ')':
                     case '{': case '}':
                     case '[': case ']':
                         // 设置转义无效
@@ -205,11 +245,15 @@ class LarkCodegg {
                 html += lark.renderKey(key, codeKeys, codeColors);
                 key = "";
             }
+            // 添加行结束
+            html += that.getLineEndHtml();
             // 输出内容
             that.rendering.innerHTML = html;
-            that.renderingRect.style.width = that.rendering.offsetWidth + "px";
-            that.renderingRect.style.height = that.rendering.offsetHeight + "px";
+            //that.renderingRect.style.width = that.rendering.offsetWidth + "px";
+            //that.renderingRect.style.height = that.rendering.offsetHeight + "px";
         });
+        // 初始化呈现
+        codegg.render();
         return codegg;
     }
 }

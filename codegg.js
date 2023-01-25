@@ -23,6 +23,8 @@ class Codegg {
     editorBox = null;
     // 工具栏
     toolbarBox = null;
+    // 配色
+    skin = null;
     // 句柄
     handlers = [];
     // 处罚错误事件
@@ -75,7 +77,7 @@ class Codegg {
             str += chr;
         }
         return str;
-    }
+    };
     // 插入内容
     insertContent(str) {
         // 转存对象
@@ -90,8 +92,8 @@ class Codegg {
         that.editor.selectionEnd = posStart + len;
         that.editor.focus();
         // 重新渲染
-        that.render();
-    }
+        that.render(true);
+    };
     // 获取选中内容
     getSelectContent(str) {
         // 转存对象
@@ -101,7 +103,7 @@ class Codegg {
         let posStart = that.editor.selectionStart;
         let posEnd = that.editor.selectionEnd;
         return content.substring(posStart, posEnd);
-    }
+    };
     // 设置代码缩进
     setSelectCodeIndentation(space) {
         // 转存对象
@@ -143,18 +145,44 @@ class Codegg {
         return space;
     };
     // 执行渲染
-    render() {
+    render(contentChanged) {
         // 转存对象
         let that = this;
         // 触发事件
         for (let i = 0; i < that.handlers.length; i++) {
             if (that.handlers[i].name === "Render") {
                 if (typeof that.handlers[i].fn === "function") {
-                    that.safeModeExecute(that.handlers[i].fn);
+                    that.safeModeExecute(that.handlers[i].fn, contentChanged);
                 }
             }
         }
-    }
+    };
+    /**
+     * 获取行开始代码
+     */
+    getLineStartHtml(line) {
+        // 转存对象
+        let that = this;
+        // 添加定位框
+        let lineNo = document.createElement("div");
+        lineNo.style.float = "left";
+        lineNo.style.width = "35px";
+        lineNo.style.textAlign = "right";
+        lineNo.style.color = that.skin.lineNoColor;
+        lineNo.style.padding = "0 5px 0 0";
+        lineNo.style.overflow = "hidden";
+        lineNo.style.boxSizing = "border-box";
+        lineNo.style.fontFamily = "consolas";
+        lineNo.innerHTML = line;
+        return "<div code-line='" + line + "' style='width: 100%;'>" + lineNo.outerHTML
+            + "<div style='float: left; padding-left: 5px; width: calc(100% - 35px); max-width: calc(100% - 35px); box-sizing: border-box; white-space: pre-wrap; word-break: break-all; overflow-wrap: break-word;'>";
+    };
+    /**
+     * 获取行结束代码
+     */
+    getLineEndHtml() {
+        return "</div><div style='clear: both;'></div></div>"
+    };
     // 创建编辑器
     constructor(id, cfg) {
         // 转存对象
@@ -165,12 +193,15 @@ class Codegg {
         if (parent === null) throw "Id not found";
         // 设置默认皮肤颜色
         let skin = {
+            lineNoColor: "#888888",
+            lineNoBackgroundColor: "#ebebeb",
             borderColor: "#cccccc",
             toolbarItemColor: "#d81e06",
             toolbarItemBackgroudColorHover: "#ffffff",
             toolbarBackgroundColor: "#ebebeb",
             toolbarSpliteColor: "#dddddd",
         };
+        that.skin = skin;
         //let toolbar = [["h1", "h2", "h3", "p", "div"], ["b", "i", "s"], ["table", "ol", "ul"], ["link", "image", "audio", "video"], ["view"]];
         let toolbar = [];
         // 设置默认
@@ -221,7 +252,7 @@ class Codegg {
                 // 无绑定事件则以默认参数执行
                 if (!binded) arg.setResult({});
             });
-        }
+        };
         let createToolSeparate = function (box) {
             // 生成分隔
             let separate = document.createElement("div");
@@ -231,7 +262,7 @@ class Codegg {
             separate.style.margin = "10px 0px 0px 10px";
             separate.style.backgroundColor = skin.toolbarSpliteColor;
             box.appendChild(separate);
-        }
+        };
         // 生成工具栏
         let createToolBar = function () {
             // 创建工具栏容器
@@ -290,7 +321,7 @@ class Codegg {
                 that.viewerBox.style.display = "none";
                 that.editorBox.style.display = "block";
             });
-        }
+        };
         that.safeModeExecute(createToolBar);
         // 生成编辑栏
         let createEditor = function () {
@@ -300,7 +331,6 @@ class Codegg {
             box.style.width = "100%";
             box.style.height = "calc(100% - 40px)";
             box.style.border = "1px solid " + skin.borderColor;
-            box.style.padding = "5px";
             box.style.boxSizing = "border-box";
             box.style.overflow = "auto";
             box.setAttribute("code-node", "box");
@@ -316,9 +346,22 @@ class Codegg {
             rect.style.minHeight = "100%";
             box.appendChild(rect);
             that.renderingRect = rect;
+            // 添加背景层
+            let background = document.createElement("div");
+            rect.appendChild(background);
+            background.style.width = "40px";
+            background.style.height = "100%";
+            background.style.backgroundColor = skin.lineNoBackgroundColor;
+            background.style.borderRight = "1px solid " + skin.borderColor;
+            background.style.fontFamily = "consolas";
+            background.style.position = "absolute";
+            background.style.left = "0";
+            background.style.top = "0";
+            background.style.zIndex = "1";
             // 添加渲染层
             let rendering = document.createElement("div");
             rect.appendChild(rendering);
+            rendering.style.width = "100%";
             rendering.style.lineHeight = "18px";
             rendering.style.fontSize = "12px";
             rendering.style.overflowY = "auto";
@@ -327,26 +370,27 @@ class Codegg {
             rendering.style.whiteSpace = "pre";
             rendering.style.position = "absolute";
             rendering.style.zIndex = "2";
-            rendering.style.padding = "0";
+            rendering.style.padding = "5px";
             rendering.style.wordBreak = "break-all";
             that.rendering = rendering;
             // 添加编辑框
             let textarea = document.createElement("textarea");
             rect.appendChild(textarea);
-            textarea.style.width = "100%";
+            textarea.style.width = "calc(100% - 40px)";
+            textarea.style.marginLeft = "40px";
             textarea.style.height = "100%";
             textarea.style.lineHeight = "18px";
             textarea.style.fontSize = "12px";
             textarea.style.boxSizing = "border-box";
             textarea.style.fontFamily = "consolas";
             textarea.style.position = "absolute";
-            textarea.style.zIndex = "2";
+            textarea.style.zIndex = "3";
             textarea.style.backgroundColor = "rgba(0, 0, 0, 0)";
             textarea.style.caretColor = "rgba(0, 0, 0, 1)";
-            textarea.style.color = "rgba(0, 0, 0, 0.1)";
+            textarea.style.color = "rgba(0, 0, 0, 0)";
             textarea.style.border = "0";
             textarea.style.outline = "none";
-            textarea.style.padding = "0";
+            textarea.style.padding = "5px";
             textarea.style.resize = "none";
             textarea.style.overflow = "hidden";
             that.editor = textarea;
@@ -390,7 +434,7 @@ class Codegg {
             textarea.addEventListener("input", function (e) {
                 that.render();
             })
-        }
+        };
         that.safeModeExecute(createEditor);
         // 生成预览栏
         let createViewer = function () {
@@ -417,7 +461,7 @@ class Codegg {
             rect.style.minHeight = "100%";
             box.appendChild(rect);
             that.viewerRect = rect;
-        }
+        };
         that.safeModeExecute(createViewer);
         // 根据工具栏调整大小
         that.editorBox.style.height = "calc(100% - " + that.toolbarBox.clientHeight + "px)";
