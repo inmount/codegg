@@ -50,6 +50,21 @@ class LarkCodegg {
         if (typeof (cfg.colors.toolbarItemBackgroudColorHover) !== "undefined") uiColors.toolbarItemBackgroudColorHover = cfg.colors.toolbarItemBackgroudColorHover;
         if (typeof (cfg.colors.toolbarBackgroundColor) !== "undefined") uiColors.toolbarBackgroundColor = cfg.colors.toolbarBackgroundColor;
         if (typeof (cfg.colors.toolbarSpliteColor) !== "undefined") uiColors.toolbarSpliteColor = cfg.colors.toolbarSpliteColor;
+        // 生成图标
+        let logoImg = "<?xml version=\"1.0\" encoding=\"utf-8\"?>";
+        logoImg += "<svg version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" x=\"0px\" y=\"0px\" viewBox=\"0 0 1024 1024\" style=\"enable-background:new 0 0 1024 1024;\" xml:space=\"preserve\">";
+        logoImg += "<style type=\"text/css\">";
+        logoImg += ".logo_st0{fill:#E21357;}";
+        logoImg += "</style>";
+        logoImg += "<g id=\"K\">";
+        logoImg += "<g>";
+        logoImg += "<path class=\"logo_st0\" d=\"M256,825.5V183.1h129.8v262.2h89.3C487,462,495,473,520,482c24,10,50,12,69.4,7.3L768,825.5H623.6L474.1,541.2h-88.3v284.2H256z\"/>";
+        logoImg += "</g>";
+        logoImg += "</g>";
+        logoImg += "<g id=\"K2\">";
+        logoImg += "<circle class=\"logo_st0\" cx=\"607.5\" cy=\"302.5\" r=\"102.5\"/>";
+        logoImg += "</g>";
+        logoImg += "</svg>";
         // 实例化一个码蛋对象
         var codegg = new Codegg("editor", {
             colors: uiColors,
@@ -65,7 +80,8 @@ class LarkCodegg {
                     { name: "multiplication", html: "*" },
                     { name: "division", html: "/" },
                 ]
-            ]
+            ],
+            logo: logoImg,
         });
         // 添加工具事件
         codegg.bind("step", function () {

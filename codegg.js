@@ -204,9 +204,11 @@ class Codegg {
         that.skin = skin;
         //let toolbar = [["h1", "h2", "h3", "p", "div"], ["b", "i", "s"], ["table", "ol", "ul"], ["link", "image", "audio", "video"], ["view"]];
         let toolbar = [];
+        let logoImg = "";
         // 设置默认
         // 填充自定义皮肤
         if (typeof cfg === "undefined") cfg = {};
+        if (typeof cfg.logo !== "undefined") logoImg = cfg.logo;
         if (typeof cfg.colors === "undefined") cfg.colors = {};
         if (typeof cfg.toolbar === "object") toolbar = cfg.toolbar;
         for (let k in cfg.colors) skin[k] = cfg.colors[k];
@@ -220,7 +222,6 @@ class Codegg {
             div.style.width = "30px";
             div.style.height = "30px";
             div.style.margin = "5px 0px 5px 6px";
-            div.style.cursor = "pointer";
             div.style.padding = "4px";
             div.style.borderRadius = "2px";
             div.style.color = skin.toolbarItemColor;
@@ -232,26 +233,30 @@ class Codegg {
             div.style.overflow = "hidden";
             div.innerHTML = html;
             box.appendChild(div);
-            div.addEventListener("mouseover", function () { div.style.backgroundColor = skin.toolbarItemBackgroudColorHover; });
-            div.addEventListener("mouseout", function () { div.style.backgroundColor = ""; });
-            div.addEventListener("click", function () {
-                let arg = {
-                    setResult: function (e) {
-                        if (typeof fn === "function") that.safeModeExecute(fn, e);
-                    }
-                };
-                let binded = false;
-                for (let i = 0; i < that.handlers.length; i++) {
-                    if (that.handlers[i].name === event) {
-                        if (typeof that.handlers[i].fn === "function") {
-                            binded = true;
-                            that.safeModeExecute(that.handlers[i].fn, arg);
+            // 添加事件处理
+            if (typeof fn === "function") {
+                div.style.cursor = "pointer";
+                div.addEventListener("mouseover", function () { div.style.backgroundColor = skin.toolbarItemBackgroudColorHover; });
+                div.addEventListener("mouseout", function () { div.style.backgroundColor = ""; });
+                div.addEventListener("click", function () {
+                    let arg = {
+                        setResult: function (e) {
+                            that.safeModeExecute(fn, e);
+                        }
+                    };
+                    let binded = false;
+                    for (let i = 0; i < that.handlers.length; i++) {
+                        if (that.handlers[i].name === event) {
+                            if (typeof that.handlers[i].fn === "function") {
+                                binded = true;
+                                that.safeModeExecute(that.handlers[i].fn, arg);
+                            }
                         }
                     }
-                }
-                // 无绑定事件则以默认参数执行
-                if (!binded) arg.setResult({});
-            });
+                    // 无绑定事件则以默认参数执行
+                    if (!binded) arg.setResult({});
+                });
+            }
         };
         let createToolSeparate = function (box) {
             // 生成分隔
@@ -285,26 +290,31 @@ class Codegg {
             boxView.style.backgroundColor = skin.toolbarBackgroundColor;
             boxView.style.display = "none";
             parent.appendChild(boxView);
+            // 生成图标
+            if (logoImg !== "") {
+                createToolItem(box, logoImg, "");
+                createToolSeparate(box);
+            }
             for (let x = 0; x < toolbar.length; x++) {
                 let group = toolbar[x];
                 if (x > 0) {
                     // 生成分割
                     createToolSeparate(box);
                 }
+                let groupBox = document.createElement("div");
+                groupBox.style.float = "left";
+                box.appendChild(groupBox);
                 for (let y = 0; y < group.length; y++) {
                     let item = group[y];
                     if (typeof item !== "object") throw "工具栏配置项必须为对象";
                     let name = item.name;
                     let html = item.html;
-                    let groupBox = document.createElement("div");
-                    groupBox.style.float = "left";
-                    box.appendChild(groupBox);
                     // 生成工具项
-                    createToolItem(groupBox, html, name);
-                    let groupClear = document.createElement("div");
-                    groupClear.style.clear = "both";
-                    groupBox.appendChild(groupClear);
+                    createToolItem(groupBox, html, name, function () { });
                 }
+                let groupClear = document.createElement("div");
+                groupClear.style.clear = "both";
+                groupBox.appendChild(groupClear);
             }
             let boxClear = document.createElement("div");
             boxClear.style.clear = "both";
