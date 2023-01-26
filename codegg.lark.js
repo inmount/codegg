@@ -15,6 +15,10 @@ class LarkCodegg {
     // 创建编辑器
     constructor(id, cfg) {
         var lark = this;
+        // 创建一个2D画布
+        const canvas = document.createElement("canvas");
+        const context = canvas.getContext("2d");
+        context.font = "12pt consolas";
         // 容错处理
         if (typeof (cfg) === "undefined") cfg = {};
         if (typeof (cfg.colors) === "undefined") cfg.colors = {};
@@ -103,13 +107,15 @@ class LarkCodegg {
             codegg.insertContent("/(val, val)");
         });
         // 添加呈现事件
-        var showInspiration = function () {
+        var showInspiration = function (line) {
             const that = codegg;
+            console.log("pos: " + posLeft + "," + posTop);
+            that.inspiration.style.left = posLeft + "px";
+            that.inspiration.style.top = posTop + "px";
         };
         codegg.bind("Render", function (contentChanged) {
             const that = codegg;
             if (typeof (contentChanged) === "undefined") contentChanged = false;
-            let posStart = that.editor.selectionStart;
             let txt = that.editor.value;
             let line = 1;
             // 添加行开始
@@ -261,12 +267,32 @@ class LarkCodegg {
                 html += lark.renderKey(key, codeKeys, codeColors);
                 key = "";
             }
+
             // 添加行结束
             html += that.getLineEndHtml();
             // 输出内容
             that.rendering.innerHTML = html;
             //that.renderingRect.style.width = that.rendering.offsetWidth + "px";
-            //that.renderingRect.style.height = that.rendering.offsetHeight + "px";
+            that.renderingRect.style.height = that.rendering.offsetHeight + "px";
+
+            // 光标位置
+            let posStart = that.editor.selectionStart;
+            let posTop = 0;
+            let posLeft = 0;
+            let editorWidth = parseFloat(that.editor.clientWidth - 5);
+            line = 1;
+            let lineString = "";
+            // 进行智能提示定位
+            for (let i = 0; i < txt.length; i++) {
+                let chr = txt[i];
+                lineString += chr;
+                if (i == posStart) {
+                    showInspiration(line);
+                }
+            }
+            if (posStart >= txt.length) {
+                showInspiration();
+            }
         });
         // 初始化呈现
         codegg.render();

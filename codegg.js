@@ -19,6 +19,8 @@ class Codegg {
     rendering = null;
     // 编辑框
     editor = null;
+    // 智能提示框
+    inspiration = null;
     // 编辑框
     editorBox = null;
     // 工具栏
@@ -193,6 +195,8 @@ class Codegg {
         if (parent === null) throw "Id not found";
         // 设置默认皮肤颜色
         let skin = {
+            inspirationoColor: "#333333",
+            inspirationBackgroundColor: "#fefefe",
             lineNoColor: "#888888",
             lineNoBackgroundColor: "#ebebeb",
             borderColor: "#cccccc",
@@ -223,7 +227,7 @@ class Codegg {
             div.style.height = "30px";
             div.style.margin = "5px 0px 5px 6px";
             div.style.padding = "4px";
-            div.style.borderRadius = "2px";
+            div.style.borderRadius = "6px";
             div.style.color = skin.toolbarItemColor;
             div.style.textAlign = "center";
             div.style.lineHeight = "22px";
@@ -404,6 +408,17 @@ class Codegg {
             textarea.style.resize = "none";
             textarea.style.overflow = "hidden";
             that.editor = textarea;
+            // 添加智能提示
+            let inspiration = document.createElement("div");
+            rect.appendChild(inspiration);
+            inspiration.style.position = "absolute";
+            inspiration.style.zIndex = "4";
+            inspiration.style.minWidth = "100px";
+            inspiration.style.minHeight = "10px";
+            inspiration.style.backgroundColor = skin.inspirationBackgroundColor;
+            inspiration.style.color = skin.inspirationoColor;
+            inspiration.style.boxShadow = "1px 1px 3px #888888";
+            that.inspiration = inspiration;
             // 处理事件
             textarea.addEventListener("keydown", function (evt) {
                 switch (evt.key) {
