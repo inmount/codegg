@@ -107,11 +107,11 @@ class LarkCodegg {
             codegg.insertContent("/(val, val)");
         });
         // 添加呈现事件
-        var showInspiration = function (line) {
+        var showInspiration = function (line, lineString) {
             const that = codegg;
-            console.log("pos: " + posLeft + "," + posTop);
-            that.inspiration.style.left = posLeft + "px";
-            that.inspiration.style.top = posTop + "px";
+            //let x = context.measureText(lineString).width;
+            let x = codegg.getTextWidth(lineString);
+            that.showInspiration(line, x);
         };
         codegg.bind("Render", function (contentChanged) {
             const that = codegg;
@@ -279,7 +279,6 @@ class LarkCodegg {
             let posStart = that.editor.selectionStart;
             let posTop = 0;
             let posLeft = 0;
-            let editorWidth = parseFloat(that.editor.clientWidth - 5);
             line = 1;
             let lineString = "";
             // 进行智能提示定位
@@ -287,11 +286,16 @@ class LarkCodegg {
                 let chr = txt[i];
                 lineString += chr;
                 if (i == posStart) {
-                    showInspiration(line);
+                    showInspiration(line, lineString);
+                }
+                // 换行
+                if (chr === '\n') {
+                    lineString = "";
+                    line++;
                 }
             }
             if (posStart >= txt.length) {
-                showInspiration();
+                showInspiration(line, lineString);
             }
         });
         // 初始化呈现

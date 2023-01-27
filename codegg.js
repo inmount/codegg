@@ -21,6 +21,8 @@ class Codegg {
     editor = null;
     // 智能提示框
     inspiration = null;
+    // 测量器
+    fontMeasure = null;
     // 编辑框
     editorBox = null;
     // 工具栏
@@ -63,6 +65,17 @@ class Codegg {
         // 转存对象
         let that = this;
         return that.editor.value;
+    };
+    /**
+     * 获取文本宽度
+     * @param {*} 文本内容 
+     * @returns
+     */
+    getTextWidth(text) {
+        // 转存对象
+        let that = this;
+        that.fontMeasure.innerHTML = text;
+        return that.fontMeasure.offsetWidth;
     };
     // 设置内容
     setContent(content) {
@@ -184,6 +197,32 @@ class Codegg {
      */
     getLineEndHtml() {
         return "</div><div style='clear: both;'></div></div>"
+    };
+    /**
+     * 添加呈现事件
+     * @param {Number} line 
+     * @param {Number} left 
+     */
+    showInspiration(line, left) {
+        const that = this;
+        const lineCode = "code-line";
+        const lineHeight = 18;
+        let eles = this.rendering.children;
+        let top = 0;
+        for (let i = 0; i < eles.length; i++) {
+            const ele = eles[i];
+            if (ele.hasAttribute(lineCode))
+                if (parseInt(ele.getAttribute(lineCode)) === line)
+                    top = ele.offsetTop;
+        }
+        console.log("pos: " + left + "," + top);
+        let editorWidth = parseFloat(that.editor.clientWidth - 5);
+        while (left > editorWidth) {
+            top += lineHeight;
+            left -= editorWidth;
+        }
+        that.inspiration.style.left = (left + 40) + "px";
+        that.inspiration.style.top = (top + lineHeight) + "px";
     };
     // 创建编辑器
     constructor(id, cfg) {
@@ -360,6 +399,18 @@ class Codegg {
             rect.style.minHeight = "100%";
             box.appendChild(rect);
             that.renderingRect = rect;
+            // 添加测量层
+            let fontMeasure = document.createElement("div");
+            rect.appendChild(fontMeasure);
+            fontMeasure.style.opacity = 0;
+            fontMeasure.style.position = "absolute";
+            fontMeasure.style.zIndex = "-1";
+            fontMeasure.style.fontFamily = "consolas";
+            fontMeasure.style.fontSize = "12px";
+            fontMeasure.style.left = "0";
+            fontMeasure.style.left = "0";
+            fontMeasure.style.whiteSpace = "pre";
+            that.fontMeasure = fontMeasure;
             // 添加背景层
             let background = document.createElement("div");
             rect.appendChild(background);
