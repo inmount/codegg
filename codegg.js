@@ -1,11 +1,6 @@
-/*
-
-Version 2.0.2301.4
-解决box-sizing兼容性问题
-
-*/
-
-// 主类
+/**
+ * 码蛋编辑器
+ */
 class Codegg {
     // 配置
     config = {};
@@ -202,8 +197,9 @@ class Codegg {
      * 添加呈现事件
      * @param {Number} line 
      * @param {Number} left 
+     * @param {Array} keys 
      */
-    showInspiration(line, left) {
+    showInspiration(line, left, keys) {
         const that = this;
         const lineCode = "code-line";
         const lineHeight = 18;
@@ -223,6 +219,15 @@ class Codegg {
         }
         that.inspiration.style.left = (left + 40) + "px";
         that.inspiration.style.top = (top + lineHeight) + "px";
+        that.inspiration.innerHTML = "";
+        // 添加待选项
+        for (let i = 0; i < keys.length; i++) {
+            let item = document.createElement("div");
+            that.inspiration.appendChild(item);
+            item.style.width = "100%";
+            item.style.padding = "3px 5px";
+            item.innerHTML = keys[i];
+        }
     };
     // 创建编辑器
     constructor(id, cfg) {
@@ -466,9 +471,14 @@ class Codegg {
             inspiration.style.zIndex = "4";
             inspiration.style.minWidth = "100px";
             inspiration.style.minHeight = "10px";
+            inspiration.style.maxHeight = "200px";
             inspiration.style.backgroundColor = skin.inspirationBackgroundColor;
             inspiration.style.color = skin.inspirationoColor;
             inspiration.style.boxShadow = "1px 1px 3px #888888";
+            inspiration.style.overflowX = "hidden";
+            inspiration.style.overflowY = "auto";
+            inspiration.style.fontFamily = "consolas";
+            inspiration.style.fontSize = "12px";
             that.inspiration = inspiration;
             // 处理事件
             textarea.addEventListener("keydown", function (evt) {

@@ -111,7 +111,7 @@ class LarkCodegg {
             const that = codegg;
             //let x = context.measureText(lineString).width;
             let x = codegg.getTextWidth(lineString);
-            that.showInspiration(line, x);
+            that.showInspiration(line, x, codeKeys);
         };
         codegg.bind("Render", function (contentChanged) {
             const that = codegg;
