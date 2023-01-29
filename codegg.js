@@ -14,8 +14,13 @@ class Codegg {
     rendering = null;
     // 编辑框
     editor = null;
+    editorSelectionStart = 0;
     // 智能提示框
     inspiration = null;
+    inspirationIndex = 0;
+    inspirationEnable = false;
+    inspirationSelectionStart = 0;
+    inspirationSelectionLength = 0;
     // 测量器
     fontMeasure = null;
     // 编辑框
@@ -202,16 +207,18 @@ class Codegg {
     showInspiration(line, left, keys) {
         const that = this;
         const lineCode = "code-line";
+        const inspirationCode = "inspiration-line";
         const lineHeight = 18;
         let eles = this.rendering.children;
         let top = 0;
+        this.inspirationIndex = 0;
         for (let i = 0; i < eles.length; i++) {
             const ele = eles[i];
             if (ele.hasAttribute(lineCode))
                 if (parseInt(ele.getAttribute(lineCode)) === line)
                     top = ele.offsetTop;
         }
-        console.log("pos: " + left + "," + top);
+        //console.log("pos: " + left + "," + top);
         let editorWidth = parseFloat(that.editor.clientWidth - 5);
         while (left > editorWidth) {
             top += lineHeight;
@@ -226,8 +233,41 @@ class Codegg {
             let item = document.createElement("div");
             that.inspiration.appendChild(item);
             item.style.width = "100%";
-            item.style.padding = "3px 5px";
+            item.style.padding = "0 5px";
+            item.style.lineHeight = "24px";
+            item.setAttribute(inspirationCode, i);
             item.innerHTML = keys[i];
+            item.addEventListener("mouseover", function () {
+                let idx = parseInt(item.getAttribute(inspirationCode));
+                if (idx != that.inspirationIndex)
+                    item.style.backgroundColor = "#dddddd";
+            });
+            item.addEventListener("mouseout", function () {
+                let idx = parseInt(item.getAttribute(inspirationCode));
+                if (idx != that.inspirationIndex)
+                    item.style.backgroundColor = "";
+            });
+        }
+        // 更新提示框
+        that.updateInspiration();
+        that.inspirationEnable = true;
+    };
+    /**
+     * 更新智能提示框
+     */
+    updateInspiration() {
+        const that = this;
+        let items = that.inspiration.children;
+        let idx = that.inspirationIndex;
+        for (let i = 0; i < items.length; i++) {
+            let item = items[i];
+            item.removeEventListener("mouseover", function () { });
+            item.removeEventListener("mouseout", function () { });
+            if (idx === i) {
+                item.style.backgroundColor = "#aaaaaa";
+            } else {
+                item.style.backgroundColor = "";
+            }
         }
     };
     /**
@@ -236,6 +276,7 @@ class Codegg {
     hideInspiration() {
         const that = this;
         that.inspiration.style.display = "none";
+        that.inspirationEnable = false;
     };
     // 创建编辑器
     constructor(id, cfg) {
@@ -492,7 +533,7 @@ class Codegg {
             textarea.addEventListener("keydown", function (evt) {
                 switch (evt.key) {
                     // Tab
-                    case "Tab": that.setSelectCodeIndentation(4); evt.returnValue = false; return;
+                    case "Tab": that.setSelectCodeIndentation(4); evt.preventDefault(); return;
                     // 回车
                     case "Enter":
                         // 获取相关内容
@@ -509,7 +550,7 @@ class Codegg {
                         that.editor.focus();
                         // 重新渲染
                         that.render();
-                        evt.returnValue = false;
+                        evt.preventDefault();
                         return;
                     case "s":
                         console.log(evt);
@@ -520,14 +561,56 @@ class Codegg {
                                     if (typeof that.handlers[i].fn === "function") that.safeModeExecute(that.handlers[i].fn);
                                 }
                             }
-                            evt.returnValue = false;
+                            evt.preventDefault();
+                        }
+                        break;
+                    case "ArrowDown":
+                        if (that.inspirationEnable) {
+                            let items = that.inspiration.children;
+                            if (that.inspirationIndex < items.length - 1) {
+                                that.inspirationIndex++;
+                                that.updateInspiration();
+                            }
+                            evt.preventDefault();
+                        }
+                        break;
+                    case "ArrowUp":
+                        if (that.inspirationEnable) {
+                            if (that.inspirationIndex > 0) {
+                                that.inspirationIndex--;
+                                that.updateInspiration();
+                            }
+                            evt.preventDefault();
+                        }
+                        break;
+                    default:
+                        //console.log("keydown: " + evt.key);
+                        break;
+                }
+            });
+            textarea.addEventListener("keyup", function (evt) {
+                switch (evt.key) {
+                    case "ArrowLeft":
+                    case "ArrowRight":
+                        let posStart2 = that.editor.selectionStart;
+                        if (posStart2 !== that.editorSelectionStart) {
+                            that.editorSelectionStart = posStart2;
+                            that.hideInspiration();
                         }
                         break;
                 }
             });
             textarea.addEventListener("input", function (e) {
+                that.editorSelectionStart = that.editor.selectionStart;
                 that.render();
-            })
+            });
+            textarea.addEventListener("mouseup", function () {
+                let posStart = that.editor.selectionStart;
+                if (posStart !== that.editorSelectionStart) {
+                    that.editorSelectionStart = posStart;
+                    that.hideInspiration();
+                }
+            });
         };
         that.safeModeExecute(createEditor);
         // 生成预览栏
