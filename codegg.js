@@ -194,7 +194,7 @@ class Codegg {
         return "</div><div style='clear: both;'></div></div>"
     };
     /**
-     * 添加呈现事件
+     * 显示智能提示
      * @param {Number} line 
      * @param {Number} left 
      * @param {Array} keys 
@@ -219,6 +219,7 @@ class Codegg {
         }
         that.inspiration.style.left = (left + 40) + "px";
         that.inspiration.style.top = (top + lineHeight) + "px";
+        that.inspiration.style.display = "block";
         that.inspiration.innerHTML = "";
         // 添加待选项
         for (let i = 0; i < keys.length; i++) {
@@ -228,6 +229,13 @@ class Codegg {
             item.style.padding = "3px 5px";
             item.innerHTML = keys[i];
         }
+    };
+    /**
+     * 隐藏智能提示
+     */
+    hideInspiration() {
+        const that = this;
+        that.inspiration.style.display = "none";
     };
     // 创建编辑器
     constructor(id, cfg) {

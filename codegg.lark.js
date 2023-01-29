@@ -1,5 +1,7 @@
 // 主类
 class LarkCodegg {
+    // 智能提示
+    inspirationKeys = [];
     // 渲染java脚本关键字
     renderKey(txt, keys, colors) {
         let key = txt;
@@ -11,14 +13,36 @@ class LarkCodegg {
             }
         }
         return "<span style='color:" + colors.text + ";'>" + txt + "</span>";
-    }
+    };
+    /**
+     * 添加智能提示关键字
+     * @param {String} key 
+     */
+    addInspirationKey(key, isCheck) {
+        const lark = this;
+        if (typeof key === "undefined") return;
+        if (key === null) return;
+        if (key === "") return;
+        if (typeof isCheck === "undefined") isCheck = false;
+        if (isCheck) {
+            if (!isNaN(parseFloat(key))) return;
+            if (key[0] === '"') return;
+        }
+        for (let i = 0; i < lark.inspirationKeys.length; i++)
+            if (lark.inspirationKeys[i] === key) return;
+        lark.inspirationKeys.push(key);
+    };
+    /**
+     * 添加智能提示关键字列表
+     * @param {String} keys 
+     */
+    addInspirationKeys(keys) {
+        const lark = this;
+        for (let i = 0; i < keys.length; i++) lark.addInspirationKey(keys[i]);
+    };
     // 创建编辑器
     constructor(id, cfg) {
-        var lark = this;
-        // 创建一个2D画布
-        const canvas = document.createElement("canvas");
-        const context = canvas.getContext("2d");
-        context.font = "12pt consolas";
+        const lark = this;
         // 容错处理
         if (typeof (cfg) === "undefined") cfg = {};
         if (typeof (cfg.colors) === "undefined") cfg.colors = {};
@@ -107,16 +131,35 @@ class LarkCodegg {
             codegg.insertContent("/(val, val)");
         });
         // 添加呈现事件
-        var showInspiration = function (line, lineString) {
+        var showInspiration = function (line, lineString, key) {
             const that = codegg;
             //let x = context.measureText(lineString).width;
             let x = codegg.getTextWidth(lineString);
-            that.showInspiration(line, x, codeKeys);
+            if (key === "") {
+                that.hideInspiration();
+            } else {
+                let keys = [];
+                for (let i = 0; i < lark.inspirationKeys.length; i++) {
+                    let inspirationKey = lark.inspirationKeys[i];
+                    if (inspirationKey.startsWith(key) && inspirationKey != key) keys.push(inspirationKey);
+                }
+                if (keys.length <= 0) {
+                    that.hideInspiration();
+                } else {
+                    that.showInspiration(line, x, keys.sort());
+                }
+            }
         };
         codegg.bind("Render", function (contentChanged) {
             const that = codegg;
             if (typeof (contentChanged) === "undefined") contentChanged = false;
             let txt = that.editor.value;
+            // 初始化智能提示列表集合
+            lark.inspirationKeys = [];
+            lark.addInspirationKeys(codeKeys);
+            // 当前输入相关
+            let posStart = that.editor.selectionStart;
+            let posKey = "";
             let line = 1;
             // 添加行开始
             let html = that.getLineStartHtml(1);
@@ -126,6 +169,7 @@ class LarkCodegg {
             let sign = 0;
             for (let i = 0; i < txt.length; i++) {
                 let chr = txt[i];
+                if (posStart == i) posKey = key;
                 switch (chr) {
                     case '\n': // 处理换行
                         // 设置转义无效
@@ -137,6 +181,8 @@ class LarkCodegg {
                             //html += "<br />";
                         } else {
                             if (key !== "") {
+                                // 添加智能提示
+                                lark.addInspirationKey(key, true);
                                 html += lark.renderKey(key, codeKeys, codeColors);
                                 key = "";
                             }
@@ -155,6 +201,8 @@ class LarkCodegg {
                     case '"':
                         if (keyType === "text") {
                             if (key !== "") {
+                                // 添加智能提示
+                                lark.addInspirationKey(key, true);
                                 html += lark.renderKey(key, codeKeys, codeColors);
                                 key = "";
                             }
@@ -179,6 +227,8 @@ class LarkCodegg {
                         if (isEscape) isEscape = false;
                         if (keyType === "text") {
                             if (key !== "") {
+                                // 添加智能提示
+                                lark.addInspirationKey(key, true);
                                 html += lark.renderKey(key, codeKeys, codeColors);
                                 key = "";
                             }
@@ -200,6 +250,8 @@ class LarkCodegg {
                             key += "&nbsp;";
                         } else {
                             if (key !== "") {
+                                // 添加智能提示
+                                lark.addInspirationKey(key, true);
                                 html += lark.renderKey(key, codeKeys, codeColors);
                                 key = "";
                             }
@@ -216,6 +268,8 @@ class LarkCodegg {
                             key += chr;
                         } else {
                             if (key !== "") {
+                                // 添加智能提示
+                                lark.addInspirationKey(key, true);
                                 html += lark.renderKey(key, codeKeys, codeColors);
                                 key = "";
                             }
@@ -230,6 +284,8 @@ class LarkCodegg {
                             key += chr;
                         } else {
                             if (key !== "") {
+                                // 添加智能提示
+                                lark.addInspirationKey(key, true);
                                 html += lark.renderKey(key, codeKeys, codeColors);
                                 key = "";
                             }
@@ -246,6 +302,8 @@ class LarkCodegg {
                             key += chr;
                         } else {
                             if (key !== "") {
+                                // 添加智能提示
+                                lark.addInspirationKey(key, true);
                                 html += lark.renderKey(key, codeKeys, codeColors);
                                 key = "";
                             }
@@ -263,7 +321,10 @@ class LarkCodegg {
                         break;
                 }
             }
+            if (posStart >= txt.length) posKey = key;
             if (key !== "") {
+                // 添加智能提示
+                lark.addInspirationKey(key, true);
                 html += lark.renderKey(key, codeKeys, codeColors);
                 key = "";
             }
@@ -276,7 +337,6 @@ class LarkCodegg {
             that.renderingRect.style.height = that.rendering.offsetHeight + "px";
 
             // 光标位置
-            let posStart = that.editor.selectionStart;
             let posTop = 0;
             let posLeft = 0;
             line = 1;
@@ -286,7 +346,7 @@ class LarkCodegg {
                 let chr = txt[i];
                 lineString += chr;
                 if (i == posStart) {
-                    showInspiration(line, lineString);
+                    showInspiration(line, lineString, posKey);
                 }
                 // 换行
                 if (chr === '\n') {
@@ -295,7 +355,7 @@ class LarkCodegg {
                 }
             }
             if (posStart >= txt.length) {
-                showInspiration(line, lineString);
+                showInspiration(line, lineString, posKey);
             }
         });
         // 初始化呈现
