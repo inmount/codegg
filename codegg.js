@@ -83,7 +83,7 @@ class Codegg {
         let that = this;
         that.editor.value = content;
         // 重新渲染
-        that.render();
+        that.render(true);
     };
     // 创建字符串
     createString(chr, num) {
@@ -135,7 +135,7 @@ class Codegg {
         that.editor.selectionEnd = posStart + len;
         that.editor.focus();
         // 重新渲染
-        that.render();
+        that.render(true);
     };
     // 获取代码缩进
     getSelectCodeIndentation() {
@@ -235,17 +235,30 @@ class Codegg {
             item.style.width = "100%";
             item.style.padding = "0 5px";
             item.style.lineHeight = "24px";
+            item.style.cursor = "default";
             item.setAttribute(inspirationCode, i);
             item.innerHTML = keys[i];
             item.addEventListener("mouseover", function () {
                 let idx = parseInt(item.getAttribute(inspirationCode));
                 if (idx != that.inspirationIndex)
-                    item.style.backgroundColor = "#dddddd";
+                    item.style.backgroundColor = that.skin.inspirationHoverColor;
             });
             item.addEventListener("mouseout", function () {
                 let idx = parseInt(item.getAttribute(inspirationCode));
                 if (idx != that.inspirationIndex)
                     item.style.backgroundColor = "";
+            });
+            item.addEventListener("click", function () {
+                // 处理内容
+                let content = that.editor.value;
+                that.editor.value = content.substring(0, that.inspirationSelectionStart) + item.innerHTML + content.substring(that.inspirationSelectionStart + that.inspirationSelectionLength, content.length);
+                that.editor.selectionStart = that.inspirationSelectionStart + item.innerHTML.length;
+                that.editor.selectionEnd = that.inspirationSelectionStart + item.innerHTML.length;
+                that.editor.focus();
+                // 重新渲染
+                that.render();
+                // 隐藏智能提示
+                that.hideInspiration();
             });
         }
         // 更新提示框
@@ -259,12 +272,17 @@ class Codegg {
         const that = this;
         let items = that.inspiration.children;
         let idx = that.inspirationIndex;
+        let top1 = idx * 24;
+        let top2 = top1 + 24;
         for (let i = 0; i < items.length; i++) {
             let item = items[i];
             item.removeEventListener("mouseover", function () { });
             item.removeEventListener("mouseout", function () { });
             if (idx === i) {
-                item.style.backgroundColor = "#aaaaaa";
+                item.style.backgroundColor = that.skin.inspirationSelectedColor;
+                // 自动调整滚动条
+                if (that.inspiration.scrollTop + that.inspiration.offsetHeight < top2) that.inspiration.scrollTop = top2 - that.inspiration.offsetHeight;
+                if (that.inspiration.scrollTop > top1) that.inspiration.scrollTop = top1;
             } else {
                 item.style.backgroundColor = "";
             }
@@ -290,6 +308,8 @@ class Codegg {
         let skin = {
             inspirationoColor: "#333333",
             inspirationBackgroundColor: "#fefefe",
+            inspirationSelectedColor: "#dddddd",
+            inspirationHoverColor: "#eeeeee",
             lineNoColor: "#888888",
             lineNoBackgroundColor: "#ebebeb",
             borderColor: "#cccccc",
@@ -528,6 +548,7 @@ class Codegg {
             inspiration.style.overflowY = "auto";
             inspiration.style.fontFamily = "consolas";
             inspiration.style.fontSize = "12px";
+            inspiration.style.display = "none";
             that.inspiration = inspiration;
             // 处理事件
             textarea.addEventListener("keydown", function (evt) {
@@ -536,20 +557,41 @@ class Codegg {
                     case "Tab": that.setSelectCodeIndentation(4); evt.preventDefault(); return;
                     // 回车
                     case "Enter":
-                        // 获取相关内容
-                        let content = that.editor.value;
-                        let posStart = that.editor.selectionStart;
-                        let posEnd = that.editor.selectionEnd;
-                        //console.log(content[posStart]);
-                        // 生成新内容
-                        let str = "\n" + that.createString(' ', that.getSelectCodeIndentation());
-                        let len = str.length;
-                        that.editor.value = content.substring(0, posStart) + str + content.substring(posEnd, content.length);
-                        that.editor.selectionStart = posStart + len;
-                        that.editor.selectionEnd = posStart + len;
-                        that.editor.focus();
-                        // 重新渲染
-                        that.render();
+                        if (that.inspirationEnable) {
+                            // 读取所有的待选项
+                            let items = that.inspiration.children;
+                            for (let i = 0; i < items.length; i++) {
+                                if (i == that.inspirationIndex) {
+                                    let item = items[i];
+                                    // 处理内容
+                                    let content = that.editor.value;
+                                    that.editor.value = content.substring(0, that.inspirationSelectionStart) + item.innerHTML + content.substring(that.inspirationSelectionStart + that.inspirationSelectionLength, content.length);
+                                    that.editor.selectionStart = that.inspirationSelectionStart + item.innerHTML.length;
+                                    that.editor.selectionEnd = that.inspirationSelectionStart + item.innerHTML.length;
+                                    that.editor.focus();
+                                    // 重新渲染
+                                    that.render();
+                                    // 隐藏智能提示
+                                    that.hideInspiration();
+                                    break;
+                                }
+                            }
+                        } else {
+                            // 获取相关内容
+                            let content = that.editor.value;
+                            let posStart = that.editor.selectionStart;
+                            let posEnd = that.editor.selectionEnd;
+                            //console.log(content[posStart]);
+                            // 生成新内容
+                            let str = "\n" + that.createString(' ', that.getSelectCodeIndentation());
+                            let len = str.length;
+                            that.editor.value = content.substring(0, posStart) + str + content.substring(posEnd, content.length);
+                            that.editor.selectionStart = posStart + len;
+                            that.editor.selectionEnd = posStart + len;
+                            that.editor.focus();
+                            // 重新渲染
+                            that.render(true);
+                        }
                         evt.preventDefault();
                         return;
                     case "s":
@@ -602,7 +644,7 @@ class Codegg {
             });
             textarea.addEventListener("input", function (e) {
                 that.editorSelectionStart = that.editor.selectionStart;
-                that.render();
+                that.render(true);
             });
             textarea.addEventListener("mouseup", function () {
                 let posStart = that.editor.selectionStart;

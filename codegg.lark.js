@@ -146,6 +146,8 @@ class LarkCodegg {
                 if (keys.length <= 0) {
                     that.hideInspiration();
                 } else {
+                    that.inspirationSelectionLength = key.length;
+                    that.inspirationSelectionStart = that.editor.selectionStart - that.inspirationSelectionLength;
                     that.showInspiration(line, x, keys.sort());
                 }
             }
@@ -335,31 +337,33 @@ class LarkCodegg {
             that.rendering.innerHTML = html;
             //that.renderingRect.style.width = that.rendering.offsetWidth + "px";
             that.renderingRect.style.height = that.rendering.offsetHeight + "px";
-
-            // 光标位置
-            let posTop = 0;
-            let posLeft = 0;
-            line = 1;
-            let lineString = "";
-            // 进行智能提示定位
-            for (let i = 0; i < txt.length; i++) {
-                let chr = txt[i];
-                lineString += chr;
-                if (i == posStart) {
+            // 处理智能提示
+            if (contentChanged) {
+                // 光标位置
+                let posTop = 0;
+                let posLeft = 0;
+                line = 1;
+                let lineString = "";
+                // 进行智能提示定位
+                for (let i = 0; i < txt.length; i++) {
+                    let chr = txt[i];
+                    lineString += chr;
+                    if (i == posStart) {
+                        showInspiration(line, lineString, posKey);
+                    }
+                    // 换行
+                    if (chr === '\n') {
+                        lineString = "";
+                        line++;
+                    }
+                }
+                if (posStart >= txt.length) {
                     showInspiration(line, lineString, posKey);
                 }
-                // 换行
-                if (chr === '\n') {
-                    lineString = "";
-                    line++;
-                }
-            }
-            if (posStart >= txt.length) {
-                showInspiration(line, lineString, posKey);
             }
         });
         // 初始化呈现
-        codegg.render();
+        codegg.render(false);
         return codegg;
     }
 }
