@@ -94,7 +94,7 @@ class LarkCodegg {
         logoImg += "</g>";
         logoImg += "</svg>";
         // 实例化一个码蛋对象
-        var codegg = new Codegg("editor", {
+        var codegg = this.Editor = new Codegg("editor", {
             colors: uiColors,
             // toolbar: [["h1", "h2", "h3", "p", "div"], ["b", "i", "s"], ["table", "ol", "ul"], ["link", "image", "audio", "video"], ["view"]]
             toolbar: [
@@ -364,6 +364,6 @@ class LarkCodegg {
         });
         // 初始化呈现
         codegg.render(false);
-        return codegg;
+        // return codegg;
     }
 }
