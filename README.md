@@ -1,155 +1,126 @@
-# 码蛋编辑器(codegg)
-
-一款基于js的代码编辑器
-
-A code editor based on js
+# Codegg Editor
+English | [简体中文](README_zhCN.md)
 
 ![license](https://img.shields.io/github/license/inmount/codegg)
 ![codeSize](https://img.shields.io/github/languages/code-size/inmount/codegg)
 ![lastCommit](https://img.shields.io/github/last-commit/inmount/codegg)
 
-## 故事的开始 - 打造属于码农的HTML编辑器
+## Introduction
+Codegg is an easy-to-use front-end editor written in vanilla JavaScript. This editor mainly supports HTML editing, and supports a functional scripting language called **Lark** in addition.
 
-作为一个码农，对现有网上现有的富文本编辑器意见很大，虽然能无脑鼠标操作，但是结果是要么排版很糟糕，要么就是限制很严重，有些编辑器甚至直接取消了源代码编辑功能。
+## Getting Started
+The editor is easy-to-use and free-to-extend. This is only a core editor which you can add some mostly-used code into it quickly. Extensions developments are welcome.
 
-对于我这种臭写代码的，就是喜欢直接用HTML代码编写详情页，不行吗？怎么就没人能体谅我们这群既当工程师，又当美工，又当客服的苦逼打工人。
-
-所以我做了这个基于原生Js的HTML编辑器，取名codegg，中文就叫码蛋吧，打工人不容易，我有空就更新增加功能，尽量让它茁壮成长。
-
-## 新的故事 - Lark脚本编辑器
-
-2023年1月；
-
-因为业务需要，我基于C#的反射及特性等技术创造出了一种函数式的脚本语言，应用于低代码平台中；
-
-写了一个VSCode插件，但是使用效果不理想，于是，我想到了码蛋编辑器；
-
-相干就干，期待这个编辑器出现全新的样貌。
-
-## 怎么开始
-
-我尽量让使用简单一点，也更自由一点，所以，我只提供一个核心编辑器，可以快速添加一些常用的代码，欢迎感兴趣的人自己扩展开发。
-
-以下是简单的使用案例:
-
-``` javascript
-// 实例化一个对象
+Here's an example:
+```js
+// Construct an object.
 var codegg = new Codegg("editor", {
-    // colors: {
-    //     borderColor: "#cccccc",
-    //     toolbarItemColor: "#d81e06",
-    //     toolbarItemBackgroudColorHover: "#ffffff",
-    //     toolbarBackgroundColor: "#ebebeb",
-    //     toolbarSpliteColor: "#dddddd",
-    // },
-    // toolbar: [["h1", "h2", "h3", "p", "div"], ["b", "i", "s"], ["table", "ol", "ul"], ["link", "image", "audio", "video"], ["view"]]
+  // Configure colors
+  colors: {
+    borderColor: "#cccccc",
+    toolbarItemColor: "#d81e06",
+    toolbarItemBackgroudColorHover: "#ffffff",
+    toolbarBackgroundColor: "#ebebeb",
+    toolbarSpliteColor: "#dddddd",
+  },
+  // Configure toolbar
+  toolbar: [["h1", "h2", "h3", "p", "div"], ["b", "i", "s"], ["table", "ol", "ul"], ["link", "image", "audio", "video"], ["view"]]
 });
-// 绑定错误
+// onError callback.
 codegg.bind("error", function (ex) {
-    alert(ex);
+  alert(ex);
 });
-// 绑定保存
+// Save event callback.
 codegg.bind("save", function () {
-    alert("保存");
+  alert("Save");
 });
-// 绑定图片操作，可以自行扩展是上传还是添加网络地址
+// On adding image. Should give a URL to the image by calling e.setResult.
 codegg.bind("image", function (e) {
-    // 设置结果
-    e.setResult({ src: "https://a.com/b.jpg" });
+  // Setting the result.
+  e.setResult({ src: "https://a.com/b.jpg" });
 });
-// 获取内容
+// Getting the content inside the editor.
 function getContent() {
-    alert(codegg.getContent());
+  alert(codegg.getContent());
 }
-// 设置内容
+// Setting the content inside the editor.
 function setContent() {
-    codegg.setContent("<div>测试内容</div>");
+  codegg.setContent("<div>Testing content</div>");
 }
 ```
 
-## 工具栏的事件扩展
+## Toolbar Event Registration
+Every item in the toolbar provides a event registration, by using method `bind(string, void)`.
+Use `setResult(object)` to set the related arguments.
 
-每一个工具栏功能项，都提供事件注册，使用bind(string,void)方式注册。
-
-使用setResult(object)方法进行相关参数设定。
-
-### 标准事件结果参数设定
-
-所有简单元素，在setResult时遵循直接使用对象属性方式一对一设置元素属性，比如添加以下代码：
-
-``` javascript
+## `setResult(object)` for Simple Elements
+For simple elements, just pass the new properties object into the `setResult(object)` method. The object will be used as the properties of the corresponding HTML element. For example,
+```js
 codegg.bind("div", function (e) {
-    // 设置结果
-    e.setResult({ name: "d1" });
+  // Set the result
+  e.setResult({ name: "d1" });
 });
 ```
 
-随后点击工具栏中的"DIV"功能项时，可以得到以下结果：
-
-``` html
+After running that, you're expected to get the following content while clicking the `div` toolbar item:
+```html
 <div name="d1"></div>
 ```
 
-### 复杂对象事件结果参数设定
+## `setResult(object)` for Complex Elements
+So-called **complex elements** are `table`, `ol` and `ul`, which you can set the their own properties and children's properties, respectively.
 
-复杂对象目标主要针对"table", "ol", "ul"三个功能项，可分别设置功能参数和元素属性。
-
-表格相关设定：
-
-``` javascript
+`table` related settings:
+```javascript
 codegg.bind("table", function (e) {
-    // 设置结果
-    e.setResult({
-        rows: 2,
-        columns: 4,
-        table: { name: "tab1" },
-        tr: { style: "background-color:#ebebeb;" },
-        td: { style: "color:#222;" }
-    });
+  // Setting the result.
+  e.setResult({
+    rows: 2,
+    columns: 4,
+    table: { name: "tab1" },
+    tr: { style: "background-color:#ebebeb;" },
+    td: { style: "color:#222;" }
+  });
 });
 ```
 
-随后点击工具栏中的表格功能项时，可以得到以下结果：
-
-``` html
+You'll get the following result after clicking the `table` toolbar item:
+```html
 <table name="tab1">
-    <tr style="background-color:#ebebeb;">
-        <td style="color:#222;">&nbsp;</td>
-        <td style="color:#222;">&nbsp;</td>
-        <td style="color:#222;">&nbsp;</td>
-        <td style="color:#222;">&nbsp;</td>
-    </tr>
-    <tr style="background-color:#ebebeb;">
-        <td style="color:#222;">&nbsp;</td>
-        <td style="color:#222;">&nbsp;</td>
-        <td style="color:#222;">&nbsp;</td>
-        <td style="color:#222;">&nbsp;</td>
-    </tr>
+  <tr style="background-color:#ebebeb;">
+    <td style="color:#222;">&nbsp;</td>
+    <td style="color:#222;">&nbsp;</td>
+    <td style="color:#222;">&nbsp;</td>
+    <td style="color:#222;">&nbsp;</td>
+  </tr>
+  <tr style="background-color:#ebebeb;">
+    <td style="color:#222;">&nbsp;</td>
+    <td style="color:#222;">&nbsp;</td>
+    <td style="color:#222;">&nbsp;</td>
+    <td style="color:#222;">&nbsp;</td>
+  </tr>
 </table>
 ```
 
-列表相关设定（有序列表和无序列表参数大致相同）：
+`ul` and `ol` related settings:
 
-``` javascript
+```js
+// If you want to set the `ul`, just replace the first
+// argument with `"ul"`.
 codegg.bind("ol", function (e) {
-    // 设置结果
-    e.setResult({
-        lines: 2,
-        ol: { name: "list1" },
-        li: { style: "color:#222;" }
-    });
+  // Setting the result.
+  e.setResult({
+    lines: 2,
+    ol: { name: "list1" },
+    li: { style: "color:#222;" }
+  });
 });
 ```
-
-随后点击工具栏中的有序列表功能项时，可以得到以下结果：
-
-``` html
+Result after clicking the `ol` (or `ul`) toolbar item:
+```html
 <ol name="list1">
-    <li style="color:#222;">&nbsp;</li>
-    <li style="color:#222;">&nbsp;</li>
-    <li style="color:#222;">&nbsp;</li>
+  <li style="color:#222;">&nbsp;</li>
+  <li style="color:#222;">&nbsp;</li>
+  <li style="color:#222;">&nbsp;</li>
 </ol>
 ```
-
-
-
